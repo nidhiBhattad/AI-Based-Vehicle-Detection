@@ -1,239 +1,253 @@
-# Part 2: Tesla Deaths Exploratory Data Analysis
+# Part 1: Historical Structure Image Classification Using CNN
 
 ## Project Overview
 
-This project is Part 2 of the AIML Capstone. The objective is to analyze the Tesla deaths dataset and study accident patterns, death events, Tesla driver and occupant fatalities, cyclist/pedestrian involvement, other vehicle collisions, Tesla model-wise distribution, and Autopilot-related fatality records.
+This project is part of the AIML Capstone work. The objective of Part 1 was to build a deep learning model for image-based object recognition.
 
-The analysis was performed using Python, Pandas, NumPy, and Matplotlib inside a Jupyter Notebook.
+The original problem statement expected an object detection model with bounding box localization. However, the provided dataset did not contain bounding box annotation files. The dataset contained only class-wise image folders. Therefore, this implementation was completed as a multi-class image classification project using a CNN-based transfer learning model.
 
 ## Dataset
 
-Dataset used:
+The dataset contains historical architectural structure images arranged into class folders.
 
-```text
-Tesla - Deaths.csv
-```
+Total classes: 11
 
-Initial dataset shape:
+Classes used:
 
-```text
-Rows: 307
-Columns: 24
-```
+1. altar
+2. apse
+3. bell_tower
+4. column
+5. dome(inner)
+6. dome(outer)
+7. flying_buttress
+8. gargoyle
+9. portal
+10. stained_glass
+11. vault
 
-After cleaning:
+## Dataset Summary
 
-```text
-Rows: 295
-```
+Initial dataset inspection:
+
+* Total image files: 12,020
+* Training images before split: 10,543
+* Test images: 1,477
+* Annotation files found: 0
+
+Processed dataset:
+
+* Training images: 8,440
+* Validation images: 2,103
+* Test images after cleaning: 1,474
+
+Note: Three corrupted test images were detected and removed before final evaluation.
 
 ## Project Folder Structure
 
 ```text
-Part2_Tesla_Deaths_EDA/
-│
-├── README.md
+Part1_Historical_Structure_CNN/
 │
 ├── data/
-│   └── Tesla - Deaths.csv
+│   ├── dataset_hist_structures 2 .zip
+│   ├── extracted/
+│   └── processed/
+│       ├── train/
+│       ├── val/
+│       └── test/
+│
+├── models/
+│   ├── historical_structure_cnn.keras
+│   └── class_names.json
 │
 ├── outputs/
-│   ├── accidents_per_year.png
-│   ├── deaths_per_year.png
-│   ├── deaths_distribution.png
-│   ├── country_distribution.png
-│   ├── state_distribution.png
-│   ├── model_distribution.png
-│   ├── deaths_by_model.png
-│   ├── autopilot_claimed_vs_verified.png
-│   ├── verified_autopilot_deaths_by_year.png
-│   ├── tesla_deaths_cleaned.csv
-│   └── summary_metrics.csv
+│   ├── training_history.png
+│   ├── classification_report.txt
+│   ├── confusion_matrix.png
+│   ├── test_metrics.json
+│   ├── sample_predictions.png
+│   └── sample_predictions.txt
 │
-└── Part2_Tesla_Deaths_EDA.ipynb
+└── src/
+    ├── 01_dataset_inspection.py
+    ├── 02_prepare_dataset.py
+    ├── 03_fix_test_classes.py
+    ├── 04_train_model.py
+    ├── 05a_clean_corrupt_images.py
+    ├── 05_evaluate_model.py
+    └── 06_predict_sample_images.py
 ```
 
 ## Technologies Used
 
 * Python
-* Jupyter Notebook
-* Pandas
-* NumPy
+* TensorFlow
+* Keras
+* MobileNetV2
 * Matplotlib
+* Scikit-learn
+* Pillow
+* NumPy
 
-## Data Cleaning Steps
+## Model Architecture
 
-The following cleaning steps were performed:
+The model uses MobileNetV2 transfer learning.
 
-1. Removed extra spaces from column names.
-2. Removed duplicate rows.
-3. Removed blank or invalid rows.
-4. Dropped unnecessary columns:
+Architecture:
 
-   * `Unnamed: 16`
-   * `Unnamed: 17`
-   * `Source`
-   * `Note`
-   * `Deceased 1`
-   * `Deceased 2`
-   * `Deceased 3`
-   * `Deceased 4`
-5. Converted numeric columns into numeric datatype.
-6. Converted the `Date` column into datetime format.
-7. Created a clean `Final_Year` column.
-8. Created derived columns for easier analysis:
+* Input image size: 224 x 224 x 3
+* Data augmentation layer
+* MobileNetV2 base model with ImageNet weights
+* Global Average Pooling layer
+* Dropout layer
+* Dense output layer with softmax activation
 
-   * `Tesla_Driver_Died`
-   * `Tesla_Occupant_Died`
-   * `Cyclist_or_Ped_Involved`
-   * `Other_Vehicle_Involved`
-   * `Autopilot_Claimed_Flag`
-   * `Verified_Autopilot_Death_Flag`
+Model details:
 
-## Why Deceased Columns Were Removed
+* Total parameters: 2,272,075
+* Trainable parameters: 14,091
+* Non-trainable parameters: 2,257,984
 
-The columns `Deceased 1`, `Deceased 2`, `Deceased 3`, and `Deceased 4` were removed because they contained deceased-person identifiers/names, had very high missing values, and were not required for the numerical EDA objectives.
+## Training Configuration
 
-The analysis focused on aggregate accident and fatality columns such as:
+* Image size: 224 x 224
+* Batch size: 32
+* Epochs: 10
+* Optimizer: Adam
+* Learning rate: 0.0005
+* Loss function: Categorical Crossentropy
+* Metric: Accuracy
 
-* `Deaths`
-* `Tesla driver`
-* `Tesla occupant`
-* `Cyclists/ Peds`
-* `Other vehicle`
-* `Model`
-* `Autopilot claimed`
-* `Verified Tesla Autopilot Deaths`
+Callbacks used:
 
-## Key Results
+* ModelCheckpoint
+* EarlyStopping
+* ReduceLROnPlateau
 
-Final cleaned dataset:
+## Training Result
+
+Best validation accuracy:
 
 ```text
-Total accident cases: 295
-Total deaths: 353
-Average deaths per accident: 1.20
+94.29%
 ```
 
-Tesla driver death analysis:
+Best epoch:
 
 ```text
-Accidents where Tesla driver died: 117
-Total Tesla driver deaths: 117
-Percentage of accidents where Tesla driver died: 39.66%
+Epoch 9
 ```
 
-Tesla occupant death analysis:
+Model saved at:
 
 ```text
-Accidents where one or more Tesla occupants died: 43
-Total Tesla occupant deaths: 48
-Proportion of events with Tesla occupant death: 14.58%
+models/historical_structure_cnn.keras
 ```
 
-Cyclist/pedestrian death analysis:
+## Test Evaluation Result
+
+Final test result:
 
 ```text
-Accidents involving cyclist/pedestrian deaths: 44
-Total cyclist/pedestrian deaths: 46
-Percentage of accidents involving cyclist/pedestrian deaths: 14.92%
+Test Accuracy: 93.21%
+Test Loss: 0.2077
 ```
 
-Tesla and cyclist/pedestrian combined fatality analysis:
+The model was evaluated on 1,474 valid test images after corrupted images were removed.
+
+## Sample Inference Result
+
+Sample inference was performed on 12 randomly selected test images.
+
+Result:
 
 ```text
-Accidents involving Tesla driver/occupant death along with cyclist/pedestrian death: 1
-Total Tesla driver/occupant + cyclist/pedestrian deaths in those accidents: 2
+Correct predictions: 11 / 12
+Approximate sample inference accuracy: 91.67%
 ```
 
-Other vehicle collision analysis:
+One gargoyle image was misclassified as bell_tower with 57.18% confidence. This is acceptable because some architectural classes have similar shapes, textures, and visual patterns.
 
-```text
-Accidents involving other vehicles: 110
-Total other vehicles involved: 130
-Percentage of accidents involving other vehicles: 37.29%
+## Important Limitation
+
+The dataset did not contain bounding box annotation files such as XML, JSON, CSV, or TXT files. Because of this, true object detection and rectangular bounding box localization could not be implemented.
+
+The original task expected object localization, but object detection requires labeled bounding boxes for each image. Since the provided dataset had only class-wise image folders, this project was implemented as a multi-class image classification solution.
+
+If bounding box annotations are provided in the future, this project can be extended using object detection models such as:
+
+* YOLO
+* Faster R-CNN
+* SSD
+* RetinaNet
+
+## How to Run the Project
+
+### 1. Inspect Dataset
+
+```powershell
+& "C:\ProgramData\anaconda3\python.exe" "E:\nidhi\simplilearn\capstone\project2\Part1_Historical_Structure_CNN\src\01_dataset_inspection.py"
 ```
 
-Autopilot claimed analysis:
+### 2. Prepare Dataset
 
-```text
-Accidents where Autopilot was claimed: 35
-Deaths in Autopilot-claimed accidents: 43
-Percentage of accidents where Autopilot was claimed: 11.86%
+```powershell
+& "C:\ProgramData\anaconda3\python.exe" "E:\nidhi\simplilearn\capstone\project2\Part1_Historical_Structure_CNN\src\02_prepare_dataset.py"
 ```
 
-Verified Tesla Autopilot death analysis:
+### 3. Fix Class Folder Consistency
 
-```text
-Events with verified Tesla Autopilot deaths: 16
-Total verified Tesla Autopilot deaths: 19
-Percentage of events with verified Autopilot deaths: 5.42%
+```powershell
+& "C:\ProgramData\anaconda3\python.exe" "E:\nidhi\simplilearn\capstone\project2\Part1_Historical_Structure_CNN\src\03_fix_test_classes.py"
 ```
 
-## Tesla Model Analysis
+### 4. Train Model
 
-The model column had many missing or unknown values.
+```powershell
+& "C:\ProgramData\anaconda3\python.exe" "E:\nidhi\simplilearn\capstone\project2\Part1_Historical_Structure_CNN\src\04_train_model.py"
+```
 
-After cleaning:
+### 5. Clean Corrupted Images
 
-* Unknown model had the highest number of records.
-* Among known models, Model S had the highest number of fatal events.
-* Model 3 was the second highest among known models.
-* Model X and Model Y had lower event counts.
+```powershell
+& "C:\ProgramData\anaconda3\python.exe" "E:\nidhi\simplilearn\capstone\project2\Part1_Historical_Structure_CNN\src\05a_clean_corrupt_images.py"
+```
 
-## Important Data Interpretation Note
+### 6. Evaluate Model
 
-The column `TSLA+cycl / peds` was inspected separately. It was not directly used for cyclist/pedestrian involvement because it contained positive values even when the `Cyclists/ Peds` column was zero.
+```powershell
+& "C:\ProgramData\anaconda3\python.exe" "E:\nidhi\simplilearn\capstone\project2\Part1_Historical_Structure_CNN\src\05_evaluate_model.py"
+```
 
-Therefore, the combined Tesla and cyclist/pedestrian fatality condition was calculated manually using:
+### 7. Run Sample Predictions
 
-* `Tesla driver`
-* `Tesla occupant`
-* `Cyclists/ Peds`
-
-## Output Charts
-
-The notebook generates the following charts:
-
-```text
-accidents_per_year.png
-deaths_per_year.png
-deaths_distribution.png
-country_distribution.png
-state_distribution.png
-model_distribution.png
-deaths_by_model.png
-autopilot_claimed_vs_verified.png
-verified_autopilot_deaths_by_year.png
+```powershell
+& "C:\ProgramData\anaconda3\python.exe" "E:\nidhi\simplilearn\capstone\project2\Part1_Historical_Structure_CNN\src\06_predict_sample_images.py"
 ```
 
 ## Output Files
 
-The project generates:
+The project generates the following output files:
 
 ```text
-tesla_deaths_cleaned.csv
-summary_metrics.csv
+outputs/training_history.png
+outputs/classification_report.txt
+outputs/confusion_matrix.png
+outputs/test_metrics.json
+outputs/sample_predictions.png
+outputs/sample_predictions.txt
 ```
-
-These files are saved inside the `outputs` folder.
-
-## Limitations
-
-The analysis has the following limitations:
-
-1. Several fields contained missing values.
-2. Many records had unknown or unreported Tesla model information.
-3. The dataset records fatal accidents only, not all Tesla accidents.
-4. The dataset does not include total Tesla miles driven.
-5. The dataset does not include Autopilot miles driven.
-6. Due to missing exposure data, true risk rate per mile cannot be calculated.
-7. Autopilot claimed and verified Autopilot deaths are different and should not be treated as the same measure.
 
 ## Conclusion
 
-The Tesla deaths dataset was cleaned and analyzed to understand fatal accident patterns and Autopilot-related death records.
+A CNN-based transfer learning model using MobileNetV2 was successfully trained to classify historical structure images into 11 categories.
 
-The cleaned dataset contained 295 accident cases and 353 total deaths. Autopilot was claimed in 35 events, representing 11.86% of the accident cases. Verified Tesla Autopilot deaths were found in 16 events, representing 5.42% of the cases.
+The final model achieved:
 
-The analysis shows that most fatal Tesla accident cases in this dataset were not verified Autopilot death events. However, because the dataset does not include total miles driven or Autopilot usage miles, it cannot prove whether Autopilot increases or decreases road safety risk. The analysis describes patterns only within the available fatal accident records.
+```text
+Best Validation Accuracy: 94.29%
+Test Accuracy: 93.21%
+Sample Inference Accuracy: 91.67%
+```
+
+The result shows that the model performs well on unseen architectural structure images. However, due to the absence of bounding box annotation files, object localization using rectangular bounding boxes could not be implemented.
